@@ -125,22 +125,40 @@ int main()
 
 	//set up vertex data (and buffer(s)) and configure vertex attributes
 	//------------------------------------------------------------------
-	float vertices[]=
-	{
-		-0.5f,-0.5f,0.0f,//left
-		0.5f,-0.5f,0.0f,//right
-		0.0f,0.5f,0.0f //top
+	//float vertices[]=
+	//{
+	//	-0.5f,-0.5f,0.0f,//left
+	//	0.5f,-0.5f,0.0f,//right
+	//	0.0f,0.5f,0.0f //top
+	//};
+	float vertices[] = {
+		// first triangle
+		 0.5f,  0.5f, 0.0f,  // top right
+		 0.5f, -0.5f, 0.0f,  // bottom right
+		-0.5f,  0.5f, 0.0f,  // top left 
+		// second triangle
+		 0.5f, -0.5f, 0.0f,  // bottom right
+		-0.5f, -0.5f, 0.0f,  // bottom left
+		-0.5f,  0.5f, 0.0f   // top left
 	};
 
+
 	unsigned int VBO, VAO;
-	glGenVertexArrays(1, &VAO);//VAO: vertex array object???
-	glGenBuffers(1, &VBO);
+	glGenVertexArrays(1, &VAO);/*DF: VAO: vertex array object???create memory on the GPU where we store the vertex data, 
+							   configure how OpenGL should interpret the memory and specify how to send the data to the graphics card.*/
+	glGenBuffers(1, &VBO); /*DF: we manage this memory via VBO that can store a large number of vertices in the GPU's memory.*/
 	//Bind the Vertex Array Object first, then bind and set vertex buffer(s), and then configure
 	//vertex attributes(s);
 	glBindVertexArray(VAO);
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+	/*DF: 
+	GL_STREAM_DRAW: the data is set only once and used by the GPU at most a few times
+	GL_STATIC_DRAW: the data is set only once and used many times
+	GL_DYNAMIC_DRAW: the data is changed a lot and used many times.*/
+	/*DF: As of now, we stored the vertex data within memory on the graphics card as managed by a vertex buffer object named VBO.*/
 
+	/*DF:set the vertex attributes pointers.*/
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
 
@@ -173,9 +191,11 @@ int main()
 		glClear(GL_COLOR_BUFFER_BIT);/*DF: clear the screen's color buffer using glClear where we pass in buffer bits to 
 									 specify which buffer we would like to clear.*/
 									 // draw our first triangle
-		glUseProgram(shaderProgram);
+		glUseProgram(shaderProgram);/*DF: it's used to activate shaderProgram.*/
 		glBindVertexArray(VAO); // seeing as we only have a single VAO there's no need to bind it every time, but we'll do so to keep things a bit more organized
-		glDrawArrays(GL_TRIANGLES, 0, 3);
+		glDrawArrays(GL_TRIANGLES, 0, 6);/*DF: First argument: the OpenGL primitive we would like to draw.
+										 Second argument: the starting index of the vertex array we'd like to draw
+										 Third argument: how many vertices we want to draw. 3 means 1 triangle. 6 means 2 triangles.*/
 
 
 		// glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
