@@ -32,11 +32,25 @@ const char *vertexShaderSource = "#version 330 core\n"
 " gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
 "}\0";
 
-const char *fragmentShaderSource = "#version 330 core\n"
+/*red, green, blue
+yellow: 1.0,1.0,0.0
+dark: 0.0, 0.0, 0.0
+red: 1.0, 0.0, 0.0
+blue: 0.0, 0.0, 1.0
+yellow:1.0,1.0,0.0
+white:1.0,1.0,1.0
+*/
+const char *fragmentShaderSource1 = "#version 330 core\n"
 "out vec4 FragColor;\n"
 "void main()\n"
 "{\n"
 "	FragColor=vec4(1.0f,0.5f,0.2f,1.0f);\n"
+"}\n\0";
+const char *fragmentShaderSource2 = "#version 330 core\n"
+"out vec4 FragColor;\n"
+"void main()\n"
+"{\n"
+"	FragColor=vec4(1.0f,1.0f,0.0f,1.0f);\n"
 "}\n\0";
 
 int main()
@@ -98,30 +112,56 @@ int main()
 		glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
 		cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << endl;
 	}
-	//fragment shader
-	int fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-	glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
-	glCompileShader(fragmentShader);
+	//fragment shader1
+	int fragmentShader1 = glCreateShader(GL_FRAGMENT_SHADER);
+	glShaderSource(fragmentShader1, 1, &fragmentShaderSource1, NULL);
+	glCompileShader(fragmentShader1);
 	//check for shader compile errors
-	glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
+	glGetShaderiv(fragmentShader1, GL_COMPILE_STATUS, &success);
 	if (!success)
 	{
-		glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
+		glGetShaderInfoLog(fragmentShader1, 512, NULL, infoLog);
 		cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLog << endl;
 	}
-	//link shaders
-	int shaderProgram = glCreateProgram();
-	glAttachShader(shaderProgram, vertexShader);
-	glAttachShader(shaderProgram, fragmentShader);
-	glLinkProgram(shaderProgram);
-	glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
+	//fragment shader2
+	int fragmentShader2 = glCreateShader(GL_FRAGMENT_SHADER);
+	glShaderSource(fragmentShader2, 1, &fragmentShaderSource2, NULL);
+	glCompileShader(fragmentShader2);
+	//check for shader compile errors
+	glGetShaderiv(fragmentShader2, GL_COMPILE_STATUS, &success);
 	if (!success)
 	{
-		glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
+		glGetShaderInfoLog(fragmentShader2, 512, NULL, infoLog);
+		cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLog << endl;
+	}
+
+	//link shaders 1 
+	int shaderProgram1 = glCreateProgram();
+	glAttachShader(shaderProgram1, vertexShader);
+	glAttachShader(shaderProgram1, fragmentShader1);
+	glLinkProgram(shaderProgram1);
+	glGetProgramiv(shaderProgram1, GL_LINK_STATUS, &success);
+	if (!success)
+	{
+		glGetProgramInfoLog(shaderProgram1, 512, NULL, infoLog);
 		cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << infoLog << endl;
 	}
+
+	//link shaders 2 
+	int shaderProgram2 = glCreateProgram();
+	glAttachShader(shaderProgram2, vertexShader);
+	glAttachShader(shaderProgram2, fragmentShader2);
+	glLinkProgram(shaderProgram2);
+	glGetProgramiv(shaderProgram2, GL_LINK_STATUS, &success);
+	if (!success)
+	{
+		glGetProgramInfoLog(shaderProgram2, 512, NULL, infoLog);
+		cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << infoLog << endl;
+	}
+
 	glDeleteShader(vertexShader);
-	glDeleteShader(fragmentShader);
+	glDeleteShader(fragmentShader1);
+	glDeleteShader(fragmentShader2);
 
 	//set up vertex data (and buffer(s)) and configure vertex attributes
 	//------------------------------------------------------------------
@@ -206,14 +246,14 @@ int main()
 		glClear(GL_COLOR_BUFFER_BIT);/*DF: clear the screen's color buffer using glClear where we pass in buffer bits to 
 									 specify which buffer we would like to clear.*/
 									 // draw our first triangle
-		glUseProgram(shaderProgram);/*DF: it's used to activate shaderProgram.*/
+		glUseProgram(shaderProgram1);/*DF: it's used to activate shaderProgram.*/
 
 		//draw first triangle
 		glBindVertexArray(VAO1); // seeing as we only have a single VAO there's no need to bind it every time, but we'll do so to keep things a bit more organized
 		glDrawArrays(GL_TRIANGLES, 0, 3);/*DF: First argument: the OpenGL primitive we would like to draw.
 										 Second argument: the starting index of the vertex array we'd like to draw
 										 Third argument: how many vertices we want to draw. 3 means 1 triangle. 6 means 2 triangles.*/
-
+		glUseProgram(shaderProgram2);
 		//draw second triangle
 		glBindVertexArray(VAO2);
 		glDrawArrays(GL_TRIANGLES, 0, 3);
@@ -230,11 +270,12 @@ int main()
 	// ------------------------------------------------------------------------
 	glDeleteVertexArrays(1, &VAO1);
 	glDeleteBuffers(1, &VBO1);
+
 	glDeleteVertexArrays(1, &VAO2);
 	glDeleteBuffers(1, &VBO2);
 
-	glDeleteProgram(shaderProgram);
-
+	glDeleteProgram(shaderProgram1);
+	glDeleteProgram(shaderProgram2);
 	// glfw: terminate, clearing all previously allocated GLFW resources.
 	// ------------------------------------------------------------------
 	glfwTerminate();
