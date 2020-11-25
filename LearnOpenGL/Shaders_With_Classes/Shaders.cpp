@@ -1,6 +1,7 @@
 #include <iostream>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include "Shader.h"
 
 using namespace::std;
 
@@ -25,23 +26,7 @@ GLSL has a vector datatype that contains 1 to 4 floats based on its postfix digi
 vertex has a 3D coordinate we create a "vec3" input variable with the name aPos. We also specifically
 set the location of the input variable via layout (location = 0).
 */
-const char *vertexShaderSource = "#version 330 core\n"
-"layout (location = 0) in vec3 aPos;\n"
-"layout (location = 1) in vec3 aColor;\n"
-"out vec3 ourColor;\n"
-"void main()\n"
-"{\n"
-" gl_Position = vec4(aPos, 1.0);\n"
-" ourColor = aColor;\n"
-"}\0";
 
-const char *fragmentShaderSource = "#version 330 core\n"
-"out vec4 FragColor;\n"
-"in vec3 ourColor;\n"
-"void main()\n"
-"{\n"
-"	FragColor=vec4(ourColor,1.0f);\n"
-"}\n\0";
 
 int main()
 {
@@ -83,49 +68,8 @@ int main()
 
 
 	//build and compile our shader program
-	//------------------------------------
-	//vertex shader
-	int vertexShader = glCreateShader(GL_VERTEX_SHADER);
-	/*DF: glShaderSource function takes the shader object to compile to as its first argument.
-	The second argument specifies how many strings we're passing as source code, which is only one.
-	The third parameter is the actual source code of the vertex shader and we can leave the 4th parameter
-	to NULL.*/
-	glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
-	glCompileShader(vertexShader);
+	Shader ourShader("./Shaders_With_Classes/shader.vs", "./Shaders_With_Classes/shader.fs");
 
-	//check for shader compile errors
-	int success;
-	char infoLog[512];
-	glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
-	if (!success)
-	{
-		glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
-		cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << endl;
-	}
-	//fragment shader
-	int fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-	glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
-	glCompileShader(fragmentShader);
-	//check for shader compile errors
-	glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
-	if (!success)
-	{
-		glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
-		cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLog << endl;
-	}
-	//link shaders
-	int shaderProgram = glCreateProgram();
-	glAttachShader(shaderProgram, vertexShader);
-	glAttachShader(shaderProgram, fragmentShader);
-	glLinkProgram(shaderProgram);
-	glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
-	if (!success)
-	{
-		glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
-		cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << infoLog << endl;
-	}
-	glDeleteShader(vertexShader);
-	glDeleteShader(fragmentShader);
 
 	//set up vertex data (and buffer(s)) and configure vertex attributes
 	//------------------------------------------------------------------
@@ -182,7 +126,8 @@ int main()
 		glClear(GL_COLOR_BUFFER_BIT);/*DF: clear the screen's color buffer using glClear where we pass in buffer bits to 
 									 specify which buffer we would like to clear.*/
 									 // draw our first triangle
-		glUseProgram(shaderProgram);
+		ourShader.use();
+
 		glBindVertexArray(VAO); // seeing as we only have a single VAO there's no need to bind it every time, but we'll do so to keep things a bit more organized
 		glDrawArrays(GL_TRIANGLES, 0, 3);
 
@@ -199,7 +144,7 @@ int main()
 	// ------------------------------------------------------------------------
 	glDeleteVertexArrays(1, &VAO);
 	glDeleteBuffers(1, &VBO);
-	glDeleteProgram(shaderProgram);
+	ourShader.deleteShaderProgram();
 
 	// glfw: terminate, clearing all previously allocated GLFW resources.
 	// ------------------------------------------------------------------
